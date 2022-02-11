@@ -1,5 +1,5 @@
 use reqwest::blocking::Client;
-use std::fmt;
+use std::{fmt, io::Write};
 use serde_json::Value;
 
 #[derive(Debug)]
@@ -106,6 +106,8 @@ impl Connection {
     }
 
     fn get(&self, command: &str, query: &[(&str, &str)], body: &str) -> Result<Value, Box<dyn std::error::Error>> {
+        //self.log(format!("Get request to /{command}\n\tQuery: {query:#?}\n\tBody: {body:#?}").as_str());
+        
         let resp = self.client.get(format!("{}/{command}", self.base_url.as_str())).query(query).body(body.to_string()).send()?.json()?;
         Ok(resp)
     }
@@ -123,6 +125,8 @@ impl Connection {
 
 
     fn post(&self, command: &str, query: &[(&str, &str)], body: &str) -> Result<Value, Box<dyn std::error::Error>> {
+        //self.log(format!("Post request to /{command}\n\tQuery: {query:#?}\n\tBody: {body:#?}").as_str());
+        
         let resp = self.client.post(format!("{}/{command}", self.base_url.as_str())).query(query).body(body.to_string()).send()?.json()?;
         Ok(resp)
     }
@@ -147,6 +151,11 @@ impl Connection {
             base_url: url.into(),
             client: Client::new(),
         }
+    }
+
+    pub fn test_connection(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let _ = self.post("test", &[], "")?;
+        Ok(())
     }
 
     pub fn get_error_description(&self, error_id: i32) -> Result<String, Box<dyn std::error::Error>> {
@@ -177,6 +186,11 @@ impl Connection {
         Ok(self.info.as_ref().unwrap().nickname.clone())
     }
 
+    pub fn ping(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let _ = self.post_with_id("ping", &[], "")?;
+        Ok(())
+    }
+
     pub fn get_state(&mut self) -> Result<State, Box<dyn std::error::Error>> {
         let state_id = self.get_parsed_with_id("state", &[], "")?
                                   .as_object().unwrap()
@@ -191,6 +205,10 @@ impl Connection {
     }
     pub fn get_stored_state(&self) -> State {
         self.state.clone()
+    }
+
+    pub fn disconnect(&self) {
+        
     }
 
     pub fn register(&mut self, nickname: String) -> Result<(), Box<dyn std::error::Error>> {

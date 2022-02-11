@@ -1,5 +1,6 @@
 use conn::*;
 
 fn main() {
-    println!("Hello, world!");
+    let connection = Connection::new("http://localhost:1337");
+    println!("{:#?}", connection.test_connection());
 }
